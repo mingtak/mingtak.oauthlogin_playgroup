@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from Products.Five.browser import BrowserView
 import logging
 from plone import api
@@ -8,8 +9,12 @@ from zope.component import getUtility, queryUtility
 from plone.registry.interfaces import IRegistry
 from Products.CMFPlone.utils import safe_unicode
 from oauthlib.oauth2 import TokenExpiredError
+from Products.PluggableAuthService.events import PASEvent
 #from plone import namedfile
 import os; os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+from zope.event import notify
+from Products.PlonePAS.events import UserLoggedInEvent, UserInitialLoginInEvent
+from Products.PluggableAuthService.events import PASEvent
 
 
 logger = logging.getLogger("mingtak.oauthlogin.browser.oauthLogin")
@@ -34,18 +39,20 @@ class OauthWorkFlow(object):
         oauth2Session.fetch_token(token_url=token_url,
                                   client_secret=client_secret,
                                   code=code)
-        getUser = oauth2Session.get(getUrl)
+        # FB api 改版後，要改格式才捉得到email 
+#        getUser = oauth2Session.get(getUrl)
+        getUser = oauth2Session.get('%s%s' % (getUrl, 'fields=name,email'))
         return getUser
 
     def createUser(self, userid, email, properties):
         if not email:
-            email = u'user@opptoday.com'
+            email = u'nobody@opptoday.com'
         user = api.user.create(username=userid, email=email, properties=properties,)
 #        import pdb; pdb.set_trace()
 #        if user.getProperty('picture'):
 #            pictureRaw = urllib2.urlopen(user.getProperty('picture')).read()
 #            namedfile.NamedBlobImage(data=pictureRaw, filename=u'portrait.png')
-        return
+        return user
 
 
 class FacebookLogin(BrowserView):
@@ -67,12 +74,14 @@ class FacebookLogin(BrowserView):
             self.request.response.redirect(authorization_url)
             return
         user = oauthWorkFlow.getUserInfo(facebook, self.token_url, client_secret, code, self.getUrl).json()
-
         # check has id, if True, is a relogin user, if False, is a new user
         userid = safe_unicode("fb%s") % user["id"]
         if api.user.get(userid=userid) is not None:
             self.context.acl_users.session._setupSession(userid.encode("utf-8"), self.context.REQUEST.RESPONSE)
             self.request.RESPONSE.redirect("/")
+            # notify event hander
+            userObject = api.user.get(userid=userid)
+            notify(UserLoggedInEvent(userObject))
             return
         userInfo = dict(
             fullname=safe_unicode(user.get("name", "")),
@@ -84,6 +93,9 @@ class FacebookLogin(BrowserView):
         oauthWorkFlow.createUser(userid, safe_unicode((user.get("email", ""))), userInfo)
         self.context.acl_users.session._setupSession(userid.encode("utf-8"), self.context.REQUEST.RESPONSE)
         self.request.RESPONSE.redirect("/")
+        # notify event hander
+        userObject = api.user.get(userid=userid)
+        notify(UserLoggedInEvent(userObject))
         return
 
 
@@ -111,6 +123,9 @@ class GoogleLogin(BrowserView):
         if api.user.get(userid=userid) is not None:
             self.context.acl_users.session._setupSession(userid.encode("utf-8"), self.context.REQUEST.RESPONSE)
             self.request.RESPONSE.redirect("/")
+            # notify event hander
+            userObject = api.user.get(userid=userid)
+            notify(UserLoggedInEvent(userObject))
             return
         userInfo = dict(
             fullname=safe_unicode(user.get("name", "")),
@@ -124,6 +139,9 @@ class GoogleLogin(BrowserView):
         oauthWorkFlow.createUser(userid, safe_unicode((user.get("email", ""))), userInfo)
         self.context.acl_users.session._setupSession(userid.encode("utf-8"), self.context.REQUEST.RESPONSE)
         self.request.RESPONSE.redirect("/")
+        # notify event hander
+        userObject = api.user.get(userid=userid)
+        notify(UserLoggedInEvent(userObject))
         return
 
 
@@ -151,6 +169,9 @@ class TwitterLogin(BrowserView):
         if api.user.get(userid=userid) is not None:
             self.context.acl_users.session._setupSession(userid.encode("utf-8"), self.context.REQUEST.RESPONSE)
             self.request.RESPONSE.redirect("/")
+            # notify event hander
+            userObject = api.user.get(userid=userid)
+            notify(UserLoggedInEvent(userObject))
             return
         userInfo = dict(
             fullname=safe_unicode(user.get("name", "")),
@@ -164,4 +185,7 @@ class TwitterLogin(BrowserView):
         oauthWorkFlow.createUser(userid, safe_unicode((user.get("email", ""))), userInfo)
         self.context.acl_users.session._setupSession(userid.encode("utf-8"), self.context.REQUEST.RESPONSE)
         self.request.RESPONSE.redirect("/")
+        # notify event hander
+        userObject = api.user.get(userid=userid)
+        notify(UserLoggedInEvent(userObject))
         return
