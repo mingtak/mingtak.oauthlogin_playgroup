@@ -39,9 +39,13 @@ class OauthWorkFlow(object):
         oauth2Session.fetch_token(token_url=token_url,
                                   client_secret=client_secret,
                                   code=code)
-        # FB api 改版後，要改格式才捉得到email 
-#        getUser = oauth2Session.get(getUrl)
-        getUser = oauth2Session.get('%s%s' % (getUrl, 'fields=name,email'))
+        # FB api 改版後，要改格式才捉得到email , 各家可能會不一樣
+        if 'https://www.googleapis.com' in getUrl:
+            getUser = oauth2Session.get(getUrl)
+        elif 'https://graph.facebook' in getUrl:
+            getUser = oauth2Session.get('%s%s' % (getUrl, 'fields=name,email'))
+        else:
+            getUser = oauth2Session.get(getUrl)
         return getUser
 
     def createUser(self, userid, email, properties):
