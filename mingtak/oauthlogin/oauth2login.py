@@ -3,7 +3,7 @@ from five import grok
 from z3c.form import group, field
 from zope import schema
 from zope.interface import invariant, Invalid
-from zope.schema.interfaces import IContextSourceBinder
+#from zope.schema.interfaces import IContextSourceBinder
 from zope.schema.vocabulary import SimpleVocabulary, SimpleTerm
 
 from plone.dexterity.content import Container
@@ -14,7 +14,7 @@ from plone.namedfile.field import NamedBlobImage, NamedBlobFile
 from plone.namedfile.interfaces import IImageScaleTraversable
 
 from z3c.relationfield.schema import RelationList, RelationChoice
-from plone.formwidget.contenttree import ObjPathSourceBinder
+#from plone.formwidget.contenttree import ObjPathSourceBinder
 
 
 from mingtak.oauthlogin import MessageFactory as _
