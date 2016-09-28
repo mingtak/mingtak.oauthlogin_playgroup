@@ -16,6 +16,9 @@ from zope.event import notify
 from Products.PlonePAS.events import UserLoggedInEvent, UserInitialLoginInEvent
 from Products.PluggableAuthService.events import PASEvent
 
+# 暫解(2016/9/28) ValueError: do_handshake_on_connect should not be specified for non-blocking sockets
+from gevent import monkey
+
 
 logger = logging.getLogger("mingtak.oauthlogin.browser.oauthLogin")
 
@@ -36,6 +39,9 @@ class OauthWorkFlow(object):
         return client_id, client_secret, scope, redirect_uri
 
     def getUserInfo(self, oauth2Session, token_url, client_secret, code, getUrl):
+        # 暫解(2016/9/28) ValueError: do_handshake_on_connect should not be specified for non-blocking sockets
+        monkey.patch_socket()
+        monkey.patch_ssl()
         oauth2Session.fetch_token(token_url=token_url,
                                   client_secret=client_secret,
                                   code=code)
