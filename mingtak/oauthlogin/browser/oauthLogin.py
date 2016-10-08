@@ -13,6 +13,8 @@ from Products.PluggableAuthService.events import PASEvent
 #from plone import namedfile
 import os; os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 from zope.event import notify
+from DateTime import DateTime
+import random
 from Products.PlonePAS.events import UserLoggedInEvent, UserInitialLoginInEvent
 from Products.PluggableAuthService.events import PASEvent
 
@@ -56,7 +58,8 @@ class OauthWorkFlow(object):
 
     def createUser(self, userid, email, properties):
         if not email:
-            email = u'nobody@opptoday.com'
+            randString = str(random.randint(0, 100000))
+            email = 'rand%s%s@opptoday.com' % (DateTime().strftime('%s'), randString)
         user = api.user.create(username=userid, email=email, properties=properties,)
 #        import pdb; pdb.set_trace()
 #        if user.getProperty('picture'):
