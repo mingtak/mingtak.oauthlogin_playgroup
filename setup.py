@@ -33,6 +33,7 @@ setup(name='mingtak.oauthlogin',
           'plone.app.registry',
           'requests-oauthlib',
           'oauthlib==0.6.3',
+          'gevent',
       ],
       entry_points="""
       # -*- Entry points: -*-

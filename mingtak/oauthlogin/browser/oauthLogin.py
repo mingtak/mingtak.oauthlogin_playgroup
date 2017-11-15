@@ -74,6 +74,7 @@ class FacebookLogin(BrowserView):
     getUrl = "https://graph.facebook.com/me?"
 
     def __call__(self):
+        portal = api.portal.get()
         oauthWorkFlow = OauthWorkFlow(oauthServerName="facebook")
         client_id, client_secret, scope, redirect_uri = oauthWorkFlow.getRegistryValue()
         code = getattr(self.request, 'code', None)
@@ -91,7 +92,7 @@ class FacebookLogin(BrowserView):
         userid = safe_unicode("fb%s") % user["id"]
         if api.user.get(userid=userid) is not None:
             self.context.acl_users.session._setupSession(userid.encode("utf-8"), self.context.REQUEST.RESPONSE)
-            self.request.RESPONSE.redirect("/")
+            self.request.RESPONSE.redirect("%s?auth" % portal.absolute_url())
             # notify event hander
             userObject = api.user.get(userid=userid)
             notify(UserLoggedInEvent(userObject))
@@ -105,7 +106,7 @@ class FacebookLogin(BrowserView):
         )
         oauthWorkFlow.createUser(userid, safe_unicode((user.get("email", ""))), userInfo)
         self.context.acl_users.session._setupSession(userid.encode("utf-8"), self.context.REQUEST.RESPONSE)
-        self.request.RESPONSE.redirect("/")
+        self.request.RESPONSE.redirect("%s?auth" % portal.absolute_url())
         # notify event hander
         userObject = api.user.get(userid=userid)
         notify(UserLoggedInEvent(userObject))
@@ -118,6 +119,7 @@ class GoogleLogin(BrowserView):
     getUrl = "https://www.googleapis.com/oauth2/v1/userinfo"
 
     def __call__(self):
+        portal = api.portal.get()
         oauthWorkFlow = OauthWorkFlow(oauthServerName="google")
         client_id, client_secret, scope, redirect_uri = oauthWorkFlow.getRegistryValue()
         scope = scope.split(',')
@@ -135,7 +137,7 @@ class GoogleLogin(BrowserView):
         userid = safe_unicode("gg%s") % user["id"]
         if api.user.get(userid=userid) is not None:
             self.context.acl_users.session._setupSession(userid.encode("utf-8"), self.context.REQUEST.RESPONSE)
-            self.request.RESPONSE.redirect("/")
+            self.request.RESPONSE.redirect("%s?auth" % portal.absolute_url())
             # notify event hander
             userObject = api.user.get(userid=userid)
             notify(UserLoggedInEvent(userObject))
@@ -151,7 +153,7 @@ class GoogleLogin(BrowserView):
         )
         oauthWorkFlow.createUser(userid, safe_unicode((user.get("email", ""))), userInfo)
         self.context.acl_users.session._setupSession(userid.encode("utf-8"), self.context.REQUEST.RESPONSE)
-        self.request.RESPONSE.redirect("/")
+        self.request.RESPONSE.redirect("%s?auth" % portal.absolute_url())
         # notify event hander
         userObject = api.user.get(userid=userid)
         notify(UserLoggedInEvent(userObject))
